@@ -1,0 +1,1006 @@
+name: Build and Test
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Test if the Correct '.gitignore' File is Present
+      run: |
+        # Check '.gitignore'
+        if [ ! -f '.gitignore' ]
+        then
+          echo -e "The '.gitignore' file is missing."
+          exit 1
+        fi
+        if ! grep --quiet 'out' '.gitignore'
+        then
+          echo -e 'The '\''.gitignore'\'' file does not have the `out` directory.'
+          exit 1
+        fi
+        if ! grep --quiet 'build' '.gitignore'
+        then
+          echo -e 'The '\''.gitignore'\'' file does not have the `build` directory.'
+          exit 1
+        fi
+        if ! grep --quiet 'cmake-build-' '.gitignore'
+        then
+          echo -e 'The '\''.gitignore'\'' file does not have the `cmake-build-*` directory pattern.'
+          exit 1
+        fi
+
+    - name: Test if the 'CMakeLists.txt' File is Present
+      run: |
+        # Check 'CMakeLists.txt'
+        if [ ! -f 'CMakeLists.txt' ]
+        then
+          echo -e "The 'CMakeLists.txt' file is missing."
+          exit 1
+        fi
+
+    - name: Configure CMake
+      run: |
+        # Configure
+        export CXXFLAGS='-fsanitize=address -fsanitize=leak -fsanitize=undefined'
+        cmake -B "${{github.workspace}}/build" -D 'CMAKE_BUILD_TYPE=Release'
+
+    - name: Compile Problem 1
+      run: |
+        # Build
+        export CXXFLAGS='-fsanitize=address -fsanitize=leak -fsanitize=undefined'
+        cmake --build "${{github.workspace}}/build" --config 'Release' --target 'problem01'
+
+    - name: Run and Test Problem 1
+      working-directory: ${{github.workspace}}/build
+      run: |
+        # Run and Test
+        TARGET='problem01'
+
+        if [ ! -f ./"$TARGET" ]
+        then
+          echo -e "The '$TARGET' executable is missing."
+          exit 1
+        fi
+
+        read -r -d '' CORRECT_OUTPUT <<-'EOF' || true
+        hello, world
+
+        EOF
+
+        OUTPUT="$(./"$TARGET")"
+        if [ $? -ne 0 ]
+        then
+          echo -e "The program '$TARGET' failed to run successfully."
+          exit 1
+        fi
+
+        if ! diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT") &>/dev/null
+        then
+          echo -e "The program '$TARGET' failed to generate the correct output (at least a single or more characters are not exact).\n\n" \
+                  'The program output:\n\n' \
+                  '```\n'                   \
+                  "$OUTPUT"                 \
+                  '\n```\n\n'               \
+                  'The correct output:\n\n' \
+                  '```\n'                   \
+                  "$CORRECT_OUTPUT"         \
+                  '\n```\n\n'               \
+                  'The diff:\n\n'           \
+                  '```diff' | sed 's/^ *//g'
+          diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT")
+          echo -e '\n```\n' | sed 's/^ *//g'
+          exit 1
+        fi
+
+        echo -e "The program '$TARGET' successfully generated the correct output."
+
+    - name: Compile Problem 2
+      run: |
+        # Build
+        export CXXFLAGS='-fsanitize=address -fsanitize=leak -fsanitize=undefined'
+        cmake --build "${{github.workspace}}/build" --config 'Release' --target 'problem02'
+
+    - name: Run and Test Problem 2
+      working-directory: ${{github.workspace}}/build
+      run: |
+        # Run and Test
+        TARGET='problem02'
+
+        if [ ! -f ./"$TARGET" ]
+        then
+          echo -e "The '$TARGET' executable is missing."
+          exit 1
+        fi
+
+        read -r -d '' CORRECT_OUTPUT <<-'EOF' || true
+        **************
+        *hello, world*
+        **************
+
+        EOF
+
+        OUTPUT="$(./"$TARGET")"
+        if [ $? -ne 0 ]
+        then
+          echo -e "The program '$TARGET' failed to run successfully."
+          exit 1
+        fi
+
+        if ! diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT") &>/dev/null
+        then
+          echo -e "The program '$TARGET' failed to generate the correct output (at least a single or more characters are not exact).\n\n" \
+                  'The program output:\n\n' \
+                  '```\n'                   \
+                  "$OUTPUT"                 \
+                  '\n```\n\n'               \
+                  'The correct output:\n\n' \
+                  '```\n'                   \
+                  "$CORRECT_OUTPUT"         \
+                  '\n```\n\n'               \
+                  'The diff:\n\n'           \
+                  '```diff' | sed 's/^ *//g'
+          diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT")
+          echo -e '\n```\n' | sed 's/^ *//g'
+          exit 1
+        fi
+
+        echo -e "The program '$TARGET' successfully generated the correct output."
+
+    - name: Compile Problem 3
+      run: |
+        # Build
+        export CXXFLAGS='-fsanitize=address -fsanitize=leak -fsanitize=undefined'
+        cmake --build "${{github.workspace}}/build" --config 'Release' --target 'problem03'
+
+    - name: Run and Test Problem 3 with Test Input 1
+      working-directory: ${{github.workspace}}/build
+      run: |
+        # Run and Test
+        TARGET='problem03'
+
+        if [ ! -f ./"$TARGET" ]
+        then
+          echo -e "The '$TARGET' executable is missing."
+          exit 1
+        fi
+
+        read -r -d '' INPUT <<-'EOF' || true
+        John
+
+        EOF
+
+        read -r -d '' CORRECT_OUTPUT <<-'EOF' || true
+        What is your name? Hello, John!
+
+        EOF
+
+        OUTPUT="$(./"$TARGET" <<< "$INPUT")"
+        if [ $? -ne 0 ]
+        then
+          echo -e "The program '$TARGET' failed to run successfully."
+          exit 1
+        fi
+
+        if ! diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT") &>/dev/null
+        then
+          echo -e "The program '$TARGET' failed to generate the correct output (at least a single or more characters are not exact).\n\n" \
+                  'The program output:\n\n' \
+                  '```\n'                   \
+                  "$OUTPUT"                 \
+                  '\n```\n\n'               \
+                  'The correct output:\n\n' \
+                  '```\n'                   \
+                  "$CORRECT_OUTPUT"         \
+                  '\n```\n\n'               \
+                  'The diff:\n\n'           \
+                  '```diff' | sed 's/^ *//g'
+          diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT")
+          echo -e '\n```\n' | sed 's/^ *//g'
+          exit 1
+        fi
+
+        echo -e "The program '$TARGET' successfully generated the correct output for Test Input 1."
+
+    - name: Run and Test Problem 3 with Test Input 2
+      working-directory: ${{github.workspace}}/build
+      run: |
+        # Run and Test
+        TARGET='problem03'
+
+        if [ ! -f ./"$TARGET" ]
+        then
+          echo -e "The '$TARGET' executable is missing."
+          exit 1
+        fi
+
+        read -r -d '' INPUT <<-'EOF' || true
+        John Doe
+
+        EOF
+
+        read -r -d '' CORRECT_OUTPUT <<-'EOF' || true
+        What is your name? Hello, John Doe!
+
+        EOF
+
+        OUTPUT="$(./"$TARGET" <<< "$INPUT")"
+        if [ $? -ne 0 ]
+        then
+          echo -e "The program '$TARGET' failed to run successfully."
+          exit 1
+        fi
+
+        if ! diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT") &>/dev/null
+        then
+          echo -e "The program '$TARGET' failed to generate the correct output (at least a single or more characters are not exact).\n\n" \
+                  'The program output:\n\n' \
+                  '```\n'                   \
+                  "$OUTPUT"                 \
+                  '\n```\n\n'               \
+                  'The correct output:\n\n' \
+                  '```\n'                   \
+                  "$CORRECT_OUTPUT"         \
+                  '\n```\n\n'               \
+                  'The diff:\n\n'           \
+                  '```diff' | sed 's/^ *//g'
+          diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT")
+          echo -e '\n```\n' | sed 's/^ *//g'
+          exit 1
+        fi
+
+        echo -e "The program '$TARGET' successfully generated the correct output for Test Input 2."
+
+    - name: Run and Test Problem 3 with Test Input 3
+      working-directory: ${{github.workspace}}/build
+      run: |
+        # Run and Test
+        TARGET='problem03'
+
+        if [ ! -f ./"$TARGET" ]
+        then
+          echo -e "The '$TARGET' executable is missing."
+          exit 1
+        fi
+
+        read -r -d '' INPUT <<-'EOF' || true
+        Toksaitov Dmitrii Aleksandrovich
+
+        EOF
+
+        read -r -d '' CORRECT_OUTPUT <<-'EOF' || true
+        What is your name? Hello, Toksaitov Dmitrii Aleksandrovich!
+
+        EOF
+
+        OUTPUT="$(./"$TARGET" <<< "$INPUT")"
+        if [ $? -ne 0 ]
+        then
+          echo -e "The program '$TARGET' failed to run successfully."
+          exit 1
+        fi
+
+        if ! diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT") &>/dev/null
+        then
+          echo -e "The program '$TARGET' failed to generate the correct output (at least a single or more characters are not exact).\n\n" \
+                  'The program output:\n\n' \
+                  '```\n'                   \
+                  "$OUTPUT"                 \
+                  '\n```\n\n'               \
+                  'The correct output:\n\n' \
+                  '```\n'                   \
+                  "$CORRECT_OUTPUT"         \
+                  '\n```\n\n'               \
+                  'The diff:\n\n'           \
+                  '```diff' | sed 's/^ *//g'
+          diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT")
+          echo -e '\n```\n' | sed 's/^ *//g'
+          exit 1
+        fi
+
+        echo -e "The program '$TARGET' successfully generated the correct output for Test Input 3."
+
+    - name: Compile Problem 4
+      run: |
+        # Build
+        export CXXFLAGS='-fsanitize=address -fsanitize=leak -fsanitize=undefined'
+        cmake --build "${{github.workspace}}/build" --config 'Release' --target 'problem04'
+
+    - name: Run and Test Problem 4 with Test Input 1
+      working-directory: ${{github.workspace}}/build
+      run: |
+        # Run and Test
+        TARGET='problem04'
+
+        if [ ! -f ./"$TARGET" ]
+        then
+          echo -e "The '$TARGET' executable is missing."
+          exit 1
+        fi
+
+        read -r -d '' INPUT <<-'EOF' || true
+        5
+        2
+
+        EOF
+
+        read -r -d '' CORRECT_OUTPUT <<-'EOF' || true
+        Enter the first integer: Enter the second integer: 5 + 2 = 7
+        5 - 2 = 3
+        5 * 2 = 10
+        5 / 2 = 2
+        5 % 2 = 1
+
+        EOF
+
+        OUTPUT="$(./"$TARGET" <<< "$INPUT")"
+        if [ $? -ne 0 ]
+        then
+          echo -e "The program '$TARGET' failed to run successfully."
+          exit 1
+        fi
+
+        if ! diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT") &>/dev/null
+        then
+          echo -e "The program '$TARGET' failed to generate the correct output (at least a single or more characters are not exact).\n\n" \
+                  'The program output:\n\n' \
+                  '```\n'                   \
+                  "$OUTPUT"                 \
+                  '\n```\n\n'               \
+                  'The correct output:\n\n' \
+                  '```\n'                   \
+                  "$CORRECT_OUTPUT"         \
+                  '\n```\n\n'               \
+                  'The diff:\n\n'           \
+                  '```diff' | sed 's/^ *//g'
+          diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT")
+          echo -e '\n```\n' | sed 's/^ *//g'
+          exit 1
+        fi
+
+        echo -e "The program '$TARGET' successfully generated the correct output for Test Input 1."
+
+    - name: Run and Test Problem 4 with Test Input 2
+      working-directory: ${{github.workspace}}/build
+      run: |
+        # Run and Test
+        TARGET='problem04'
+
+        if [ ! -f ./"$TARGET" ]
+        then
+          echo -e "The '$TARGET' executable is missing."
+          exit 1
+        fi
+
+        read -r -d '' INPUT <<-'EOF' || true
+        6
+        2
+
+        EOF
+
+        read -r -d '' CORRECT_OUTPUT <<-'EOF' || true
+        Enter the first integer: Enter the second integer: 6 + 2 = 8
+        6 - 2 = 4
+        6 * 2 = 12
+        6 / 2 = 3
+        6 % 2 = 0
+
+        EOF
+
+        OUTPUT="$(./"$TARGET" <<< "$INPUT")"
+        if [ $? -ne 0 ]
+        then
+          echo -e "The program '$TARGET' failed to run successfully."
+          exit 1
+        fi
+
+        if ! diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT") &>/dev/null
+        then
+          echo -e "The program '$TARGET' failed to generate the correct output (at least a single or more characters are not exact).\n\n" \
+                  'The program output:\n\n' \
+                  '```\n'                   \
+                  "$OUTPUT"                 \
+                  '\n```\n\n'               \
+                  'The correct output:\n\n' \
+                  '```\n'                   \
+                  "$CORRECT_OUTPUT"         \
+                  '\n```\n\n'               \
+                  'The diff:\n\n'           \
+                  '```diff' | sed 's/^ *//g'
+          diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT")
+          echo -e '\n```\n' | sed 's/^ *//g'
+          exit 1
+        fi
+
+        echo -e "The program '$TARGET' successfully generated the correct output for Test Input 2."
+
+    - name: Run and Test Problem 4 with Test Input 3
+      working-directory: ${{github.workspace}}/build
+      run: |
+        # Run and Test
+        TARGET='problem04'
+
+        if [ ! -f ./"$TARGET" ]
+        then
+          echo -e "The '$TARGET' executable is missing."
+          exit 1
+        fi
+
+        read -r -d '' INPUT <<-'EOF' || true
+        -1
+        1
+
+        EOF
+
+        read -r -d '' CORRECT_OUTPUT <<-'EOF' || true
+        Enter the first integer: Enter the second integer: -1 + 1 = 0
+        -1 - 1 = -2
+        -1 * 1 = -1
+        -1 / 1 = -1
+        -1 % 1 = 0
+
+        EOF
+
+        OUTPUT="$(./"$TARGET" <<< "$INPUT")"
+        if [ $? -ne 0 ]
+        then
+          echo -e "The program '$TARGET' failed to run successfully."
+          exit 1
+        fi
+
+        if ! diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT") &>/dev/null
+        then
+          echo -e "The program '$TARGET' failed to generate the correct output (at least a single or more characters are not exact).\n\n" \
+                  'The program output:\n\n' \
+                  '```\n'                   \
+                  "$OUTPUT"                 \
+                  '\n```\n\n'               \
+                  'The correct output:\n\n' \
+                  '```\n'                   \
+                  "$CORRECT_OUTPUT"         \
+                  '\n```\n\n'               \
+                  'The diff:\n\n'           \
+                  '```diff' | sed 's/^ *//g'
+          diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT")
+          echo -e '\n```\n' | sed 's/^ *//g'
+          exit 1
+        fi
+
+        echo -e "The program '$TARGET' successfully generated the correct output for Test Input 3."
+
+    - name: Test if the `fmod` Function Was Used in Problem 5
+      run: |
+        # Check 'problem05.cpp'
+        if [ ! -f 'problem05.cpp' ]
+        then
+          echo -e "The 'problem05.cpp' file is missing."
+          exit 1
+        fi
+        if ! grep --quiet 'fmod' 'problem05.cpp'
+        then
+          echo -e 'The '\''problem05.cpp'\'' file should have the `fmod` function call.'
+          exit 1
+        fi
+
+    - name: Compile Problem 5
+      run: |
+        # Build
+        export CXXFLAGS='-fsanitize=address -fsanitize=leak -fsanitize=undefined'
+        cmake --build "${{github.workspace}}/build" --config 'Release' --target 'problem05'
+
+    - name: Run and Test Problem 5 with Test Input 1
+      working-directory: ${{github.workspace}}/build
+      run: |
+        # Run and Test
+        TARGET='problem05'
+
+        if [ ! -f ./"$TARGET" ]
+        then
+          echo -e "The '$TARGET' executable is missing."
+          exit 1
+        fi
+
+        read -r -d '' INPUT <<-'EOF' || true
+        5.1
+        2.6
+
+        EOF
+
+        read -r -d '' CORRECT_OUTPUT <<-'EOF' || true
+        Enter the first double: Enter the second double: 5.1 + 2.6 = 7.7
+        5.1 - 2.6 = 2.5
+        5.1 * 2.6 = 13.26
+        5.1 / 2.6 = 1.96154
+        5.1 % 2.6 = 2.5
+
+        EOF
+
+        OUTPUT="$(./"$TARGET" <<< "$INPUT")"
+        if [ $? -ne 0 ]
+        then
+          echo -e "The program '$TARGET' failed to run successfully."
+          exit 1
+        fi
+
+        if ! diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT") &>/dev/null
+        then
+          echo -e "The program '$TARGET' failed to generate the correct output (at least a single or more characters are not exact).\n\n" \
+                  'The program output:\n\n' \
+                  '```\n'                   \
+                  "$OUTPUT"                 \
+                  '\n```\n\n'               \
+                  'The correct output:\n\n' \
+                  '```\n'                   \
+                  "$CORRECT_OUTPUT"         \
+                  '\n```\n\n'               \
+                  'The diff:\n\n'           \
+                  '```diff' | sed 's/^ *//g'
+          diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT")
+          echo -e '\n```\n' | sed 's/^ *//g'
+          exit 1
+        fi
+
+        echo -e "The program '$TARGET' successfully generated the correct output for Test Input 1."
+
+    - name: Run and Test Problem 5 with Test Input 2
+      working-directory: ${{github.workspace}}/build
+      run: |
+        # Run and Test
+        TARGET='problem05'
+
+        if [ ! -f ./"$TARGET" ]
+        then
+          echo -e "The '$TARGET' executable is missing."
+          exit 1
+        fi
+
+        read -r -d '' INPUT <<-'EOF' || true
+        6
+        2
+
+        EOF
+
+        read -r -d '' CORRECT_OUTPUT <<-'EOF' || true
+        Enter the first double: Enter the second double: 6 + 2 = 8
+        6 - 2 = 4
+        6 * 2 = 12
+        6 / 2 = 3
+        6 % 2 = 0
+
+        EOF
+
+        OUTPUT="$(./"$TARGET" <<< "$INPUT")"
+        if [ $? -ne 0 ]
+        then
+          echo -e "The program '$TARGET' failed to run successfully."
+          exit 1
+        fi
+
+        if ! diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT") &>/dev/null
+        then
+          echo -e "The program '$TARGET' failed to generate the correct output (at least a single or more characters are not exact).\n\n" \
+                  'The program output:\n\n' \
+                  '```\n'                   \
+                  "$OUTPUT"                 \
+                  '\n```\n\n'               \
+                  'The correct output:\n\n' \
+                  '```\n'                   \
+                  "$CORRECT_OUTPUT"         \
+                  '\n```\n\n'               \
+                  'The diff:\n\n'           \
+                  '```diff' | sed 's/^ *//g'
+          diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT")
+          echo -e '\n```\n' | sed 's/^ *//g'
+          exit 1
+        fi
+
+        echo -e "The program '$TARGET' successfully generated the correct output for Test Input 2."
+
+    - name: Run and Test Problem 5 with Test Input 3
+      working-directory: ${{github.workspace}}/build
+      run: |
+        # Run and Test
+        TARGET='problem05'
+
+        if [ ! -f ./"$TARGET" ]
+        then
+          echo -e "The '$TARGET' executable is missing."
+          exit 1
+        fi
+
+        read -r -d '' INPUT <<-'EOF' || true
+        -0.000001
+        0.000001
+
+        EOF
+
+        read -r -d '' CORRECT_OUTPUT <<-'EOF' || true
+        Enter the first double: Enter the second double: -1e-06 + 1e-06 = 0
+        -1e-06 - 1e-06 = -2e-06
+        -1e-06 * 1e-06 = -1e-12
+        -1e-06 / 1e-06 = -1
+        -1e-06 % 1e-06 = -0
+
+        EOF
+
+        OUTPUT="$(./"$TARGET" <<< "$INPUT")"
+        if [ $? -ne 0 ]
+        then
+          echo -e "The program '$TARGET' failed to run successfully."
+          exit 1
+        fi
+
+        if ! diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT") &>/dev/null
+        then
+          echo -e "The program '$TARGET' failed to generate the correct output (at least a single or more characters are not exact).\n\n" \
+                  'The program output:\n\n' \
+                  '```\n'                   \
+                  "$OUTPUT"                 \
+                  '\n```\n\n'               \
+                  'The correct output:\n\n' \
+                  '```\n'                   \
+                  "$CORRECT_OUTPUT"         \
+                  '\n```\n\n'               \
+                  'The diff:\n\n'           \
+                  '```diff' | sed 's/^ *//g'
+          diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT")
+          echo -e '\n```\n' | sed 's/^ *//g'
+          exit 1
+        fi
+
+        echo -e "The program '$TARGET' successfully generated the correct output for Test Input 3."
+
+    - name: Compile Problem 6
+      run: |
+        # Build
+        export CXXFLAGS='-fsanitize=address -fsanitize=leak -fsanitize=undefined'
+        cmake --build "${{github.workspace}}/build" --config 'Release' --target 'problem06'
+
+    - name: Run and Test Problem 6
+      working-directory: ${{github.workspace}}/build
+      run: |
+        # Run and Test
+        TARGET='problem06'
+
+        if [ ! -f ./"$TARGET" ]
+        then
+          echo -e "The '$TARGET' executable is missing."
+          exit 1
+        fi
+
+        read -r -d '' CORRECT_OUTPUT <<-'EOF' || true
+        *        *********
+        ***        *******
+        *****        *****
+        *******        ***
+        *********        *
+
+        EOF
+
+        OUTPUT="$(./"$TARGET")"
+        if [ $? -ne 0 ]
+        then
+          echo -e "The program '$TARGET' failed to run successfully."
+          exit 1
+        fi
+
+        if ! diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT") &>/dev/null
+        then
+          echo -e "The program '$TARGET' failed to generate the correct output (at least a single or more characters are not exact).\n\n" \
+                  'The program output:\n\n' \
+                  '```\n'                   \
+                  "$OUTPUT"                 \
+                  '\n```\n\n'               \
+                  'The correct output:\n\n' \
+                  '```\n'                   \
+                  "$CORRECT_OUTPUT"         \
+                  '\n```\n\n'               \
+                  'The diff:\n\n'           \
+                  '```diff' | sed 's/^ *//g'
+          diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT")
+          echo -e '\n```\n' | sed 's/^ *//g'
+          exit 1
+        fi
+
+        echo -e "The program '$TARGET' successfully generated the correct output."
+
+    - name: Test if the Integer Variable `sum` Was Used in Problem 7
+      run: |
+        # Check 'problem07.cpp'
+        if [ ! -f 'problem07.cpp' ]
+        then
+          echo -e "The 'problem07.cpp' file is missing."
+          exit 1
+        fi
+        if ! grep --quiet 'int sum' 'problem07.cpp'
+        then
+          echo -e 'The '\''problem07.cpp'\'' file should have an integer sum declared as `int sum`.'
+          exit 1
+        fi
+
+    - name: Compile Problem 7
+      run: |
+        # Build
+        export CXXFLAGS='-fsanitize=address -fsanitize=leak -fsanitize=undefined'
+        cmake --build "${{github.workspace}}/build" --config 'Release' --target 'problem07'
+
+    - name: Run and Test Problem 7
+      working-directory: ${{github.workspace}}/build
+      run: |
+        # Run and Test
+        TARGET='problem07'
+
+        if [ ! -f ./"$TARGET" ]
+        then
+          echo -e "The '$TARGET' executable is missing."
+          exit 1
+        fi
+
+        read -r -d '' CORRECT_OUTPUT <<-'EOF' || true
+        100
+
+        EOF
+
+        OUTPUT="$(./"$TARGET")"
+        if [ $? -ne 0 ]
+        then
+          echo -e "The program '$TARGET' failed to run successfully."
+          exit 1
+        fi
+
+        if ! diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT") &>/dev/null
+        then
+          echo -e "The program '$TARGET' failed to generate the correct output (at least a single or more characters are not exact).\n\n" \
+                  'The program output:\n\n' \
+                  '```\n'                   \
+                  "$OUTPUT"                 \
+                  '\n```\n\n'               \
+                  'The correct output:\n\n' \
+                  '```\n'                   \
+                  "$CORRECT_OUTPUT"         \
+                  '\n```\n\n'               \
+                  'The diff:\n\n'           \
+                  '```diff' | sed 's/^ *//g'
+          diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT")
+          echo -e '\n```\n' | sed 's/^ *//g'
+          exit 1
+        fi
+
+        echo -e "The program '$TARGET' successfully generated the correct output."
+
+    - name: Test if the Double Variables `pi1` and `pi2` Were Used in Problem 8
+      run: |
+        # Check 'problem08.cpp'
+        if [ ! -f 'problem08.cpp' ]
+        then
+          echo -e "The 'problem08.cpp' file is missing."
+          exit 1
+        fi
+        if ! grep --quiet 'double pi1' 'problem08.cpp'
+        then
+          echo -e 'The '\''problem08.cpp'\'' file should have a double `pi1` declared as `double pi1`.'
+          exit 1
+        fi
+        if ! grep --quiet 'double pi2' 'problem08.cpp'
+        then
+          echo -e 'The '\''problem08.cpp'\'' file should have a double `pi2` declared as `double pi2`.'
+          exit 1
+        fi
+
+    - name: Test if the `sqrt` Function Was Used in Problem 8
+      run: |
+        # Check 'problem08.cpp'
+        if [ ! -f 'problem08.cpp' ]
+        then
+          echo -e "The 'problem08.cpp' file is missing."
+          exit 1
+        fi
+        if ! grep --quiet 'sqrt' 'problem08.cpp'
+        then
+          echo -e 'The '\''problem08.cpp'\'' file should have the `sqrt` function call.'
+          exit 1
+        fi
+
+    - name: Compile Problem 8
+      run: |
+        # Build
+        export CXXFLAGS='-fsanitize=address -fsanitize=leak -fsanitize=undefined'
+        cmake --build "${{github.workspace}}/build" --config 'Release' --target 'problem08'
+
+    - name: Run and Test Problem 8
+      working-directory: ${{github.workspace}}/build
+      run: |
+        # Run and Test
+        TARGET='problem08'
+
+        if [ ! -f ./"$TARGET" ]
+        then
+          echo -e "The '$TARGET' executable is missing."
+          exit 1
+        fi
+
+        read -r -d '' CORRECT_OUTPUT <<-'EOF' || true
+        2.96339
+        2.99138
+
+        EOF
+
+        OUTPUT="$(./"$TARGET")"
+        if [ $? -ne 0 ]
+        then
+          echo -e "The program '$TARGET' failed to run successfully."
+          exit 1
+        fi
+
+        if ! diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT") &>/dev/null
+        then
+          echo -e "The program '$TARGET' failed to generate the correct output (at least a single or more characters are not exact).\n\n" \
+                  'The program output:\n\n' \
+                  '```\n'                   \
+                  "$OUTPUT"                 \
+                  '\n```\n\n'               \
+                  'The correct output:\n\n' \
+                  '```\n'                   \
+                  "$CORRECT_OUTPUT"         \
+                  '\n```\n\n'               \
+                  'The diff:\n\n'           \
+                  '```diff' | sed 's/^ *//g'
+          diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT")
+          echo -e '\n```\n' | sed 's/^ *//g'
+          exit 1
+        fi
+
+        echo -e "The program '$TARGET' successfully generated the correct output."
+
+    - name: Test if the `setw` and `left`/`right` Manipulators Were Used in Problem 9
+      run: |
+        # Check 'problem09.cpp'
+        if [ ! -f 'problem09.cpp' ]
+        then
+          echo -e "The 'problem09.cpp' file is missing."
+          exit 1
+        fi
+        if ! grep --quiet 'setw' 'problem09.cpp'
+        then
+          echo -e 'The '\''problem09.cpp'\'' file should have the `setw` function call.'
+          exit 1
+        fi
+        if ! grep --quiet 'left' 'problem09.cpp'
+        then
+          echo -e 'The '\''problem09.cpp'\'' file should have the `left` I/O manipulator.'
+          exit 1
+        fi
+        if ! grep --quiet 'right' 'problem09.cpp'
+        then
+          echo -e 'The '\''problem09.cpp'\'' file should have the `right` I/O manipulator.'
+          exit 1
+        fi
+
+    - name: Compile Problem 9
+      run: |
+        # Build
+        export CXXFLAGS='-fsanitize=address -fsanitize=leak -fsanitize=undefined'
+        cmake --build "${{github.workspace}}/build" --config 'Release' --target 'problem09'
+
+    - name: Run and Test Problem 9
+      working-directory: ${{github.workspace}}/build
+      run: |
+        # Run and Test
+        TARGET='problem09'
+
+        if [ ! -f ./"$TARGET" ]
+        then
+          echo -e "The '$TARGET' executable is missing."
+          exit 1
+        fi
+
+        read -r -d '' CORRECT_OUTPUT <<-'EOF' || true
+        p       p*5     p*10
+        5        25       50
+        10       50      100
+        25      125      250
+        50      250      500
+
+        EOF
+
+        OUTPUT="$(./"$TARGET")"
+        if [ $? -ne 0 ]
+        then
+          echo -e "The program '$TARGET' failed to run successfully."
+          exit 1
+        fi
+
+        if ! diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT") &>/dev/null
+        then
+          echo -e "The program '$TARGET' failed to generate the correct output (at least a single or more characters are not exact).\n\n" \
+                  'The program output:\n\n' \
+                  '```\n'                   \
+                  "$OUTPUT"                 \
+                  '\n```\n\n'               \
+                  'The correct output:\n\n' \
+                  '```\n'                   \
+                  "$CORRECT_OUTPUT"         \
+                  '\n```\n\n'               \
+                  'The diff:\n\n'           \
+                  '```diff' | sed 's/^ *//g'
+          diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT")
+          echo -e '\n```\n' | sed 's/^ *//g'
+          exit 1
+        fi
+
+        echo -e "The program '$TARGET' successfully generated the correct output."
+
+    - name: Test if the `round` Function Was Used in Problem 10
+      run: |
+        # Check 'problem10.cpp'
+        if [ ! -f 'problem10.cpp' ]
+        then
+          echo -e "The 'problem10.cpp' file is missing."
+          exit 1
+        fi
+        if ! grep --quiet 'round' 'problem10.cpp'
+        then
+          echo -e 'The '\''problem10.cpp'\'' file should have the `round` function call.'
+          exit 1
+        fi
+
+    - name: Compile Problem 10
+      run: |
+        # Build
+        export CXXFLAGS='-fsanitize=address -fsanitize=leak -fsanitize=undefined'
+        cmake --build "${{github.workspace}}/build" --config 'Release' --target 'problem10'
+
+    - name: Run and Test Problem 10
+      working-directory: ${{github.workspace}}/build
+      run: |
+        # Run and Test
+        TARGET='problem10'
+
+        if [ ! -f ./"$TARGET" ]
+        then
+          echo -e "The '$TARGET' executable is missing."
+          exit 1
+        fi
+
+        read -r -d '' CORRECT_OUTPUT <<-'EOF' || true
+        314812583
+        317592679
+        320372776
+        323152873
+        325932970
+
+        EOF
+
+        OUTPUT="$(./"$TARGET")"
+        if [ $? -ne 0 ]
+        then
+          echo -e "The program '$TARGET' failed to run successfully."
+          exit 1
+        fi
+
+        if ! diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT") &>/dev/null
+        then
+          echo -e "The program '$TARGET' failed to generate the correct output (at least a single or more characters are not exact).\n\n" \
+                  'The program output:\n\n' \
+                  '```\n'                   \
+                  "$OUTPUT"                 \
+                  '\n```\n\n'               \
+                  'The correct output:\n\n' \
+                  '```\n'                   \
+                  "$CORRECT_OUTPUT"         \
+                  '\n```\n\n'               \
+                  'The diff:\n\n'           \
+                  '```diff' | sed 's/^ *//g'
+          diff --strip-trailing-cr <(echo "$OUTPUT") <(echo "$CORRECT_OUTPUT")
+          echo -e '\n```\n' | sed 's/^ *//g'
+          exit 1
+        fi
+
+        echo -e "The program '$TARGET' successfully generated the correct output."
