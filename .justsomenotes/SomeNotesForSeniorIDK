@@ -1,0 +1,8 @@
+12.11.24
+Started the AI journey by downloading "Ollama" package manager which allows to download and run AI models. At the first time it was painful to realise that there is no space for bigger models to test 
+(cause choosing the other disk side is SOO hard in apps, I guess :\) so there was no choice but to choose models that weigh less: around 2GB of space at least. It is the only time I found out that the
+size of the model is based on the 'B' metric, which is the billion parameters.
+
+For now, I've downloaded the "llama3.2" model for the future testing with test student works (it is possible to modify some of student works with bad style of writing to test the model response),
+prepared the copy repository from the original. Tried to ask the model with questions about "Hello world" and the model answered pretty fast in general (at least for me), but it might be possible to 
+change models to a more faster ones for quicker response due to grader's speed mb. 
