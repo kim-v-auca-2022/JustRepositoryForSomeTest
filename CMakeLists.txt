@@ -1,0 +1,15 @@
+cmake_minimum_required(VERSION 3.22)
+project(practice_1)
+
+set(CMAKE_CXX_STANDARD 17)
+
+add_executable(problem01 problem01.cpp)
+add_executable(problem02 problem02.cpp)
+add_executable(problem03 problem03.cpp)
+add_executable(problem04 problem04.cpp)
+add_executable(problem05 problem05.cpp)
+add_executable(problem06 problem06.cpp)
+add_executable(problem07 problem07.cpp)
+add_executable(problem08 problem08.cpp)
+add_executable(problem09 problem09.cpp)
+add_executable(problem10 problem10.cpp)
