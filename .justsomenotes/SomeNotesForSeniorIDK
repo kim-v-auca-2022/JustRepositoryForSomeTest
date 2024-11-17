@@ -6,3 +6,11 @@ size of the model is based on the 'B' metric, which is the billion parameters.
 For now, I've downloaded the "llama3.2" model for the future testing with test student works (it is possible to modify some of student works with bad style of writing to test the model response),
 prepared the copy repository from the original. Tried to ask the model with questions about "Hello world" and the model answered pretty fast in general (at least for me), but it might be possible to 
 change models to a more faster ones for quicker response due to grader's speed mb. 
+
+
+
+17.11.24
+Added echo message to the workflow file, which warns about the usage of AI in the grader without the effect of a grade.
+
+Tried to research the basics of using github actions and methods of sending HTTP requests into another server (in this case, my computer). Still confused about using the IP of computer properly.
+For now, looking forward to see, what -curl command does inside an example code in gmail.
