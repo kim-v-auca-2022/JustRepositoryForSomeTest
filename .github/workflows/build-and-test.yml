@@ -1014,9 +1014,10 @@ jobs:
                 "----------------------------------------------\n"
 
         # Send Code
-        REPO_NAME="${{ github.repository }}"
-        curl -X POST "http://auca.space:3920/check?repo=$REPO_NAME" \
-             -H "Content-Type: text/plain"                          \
-             --data-binary "@nbody-mpi.c"
+        # REPO_NAME="${{ github.repository }}"
+        # curl -X POST "http://auca.space:3920/check?repo=$REPO_NAME" \
+             # -H "Content-Type: text/plain"                          \
+             # --data-binary "@nbody-mpi.c"
+        curl --help
 
         echo -e "----------------------------------------------\n"
