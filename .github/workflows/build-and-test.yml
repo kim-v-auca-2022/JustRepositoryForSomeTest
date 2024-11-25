@@ -1018,6 +1018,6 @@ jobs:
         # curl -X POST "http://auca.space:3920/check?repo=$REPO_NAME" \
              # -H "Content-Type: text/plain"                          \
              # --data-binary "@nbody-mpi.c"
-        curl --help category
+        curl -X POST "http://212.112.119.235"
 
         echo -e "----------------------------------------------\n"
