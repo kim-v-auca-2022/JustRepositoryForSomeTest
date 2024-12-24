@@ -14,3 +14,8 @@ Added echo message to the workflow file, which warns about the usage of AI in th
 
 Tried to research the basics of using github actions and methods of sending HTTP requests into another server (in this case, my computer). Still confused about using the IP of computer properly.
 For now, looking forward to see, what -curl command does inside an example code in gmail.
+
+
+
+24.12.24
+Wrote the first server program in c which sends hello messages to the client when connected with curl command
