@@ -1014,7 +1014,7 @@ jobs:
                 "----------------------------------------------\n"
 
         # Send Code
-        ls ../../
+        ls 
         cat ../../problem01.cpp
         stat --printf="%s" ../../problem01.cpp > sendtestnum.txt
         
