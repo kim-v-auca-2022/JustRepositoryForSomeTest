@@ -1014,10 +1014,13 @@ jobs:
                 "----------------------------------------------\n"
 
         # Send Code
+        cat ../../problem01.cpp
+        stat --printf="%s" ../../problem01.cpp > sendtestnum.txt
+        
         # REPO_NAME="${{ github.repository }}"
         # curl -X POST "http://auca.space:3920/check?repo=$REPO_NAME" \
              # -H "Content-Type: text/plain"                          \
              # --data-binary "@nbody-mpi.c"
-        curl -X POST "http://212.112.119.235"
+        # curl -X POST "http://212.112.119.235"
 
         echo -e "----------------------------------------------\n"
