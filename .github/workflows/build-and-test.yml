@@ -1014,9 +1014,10 @@ jobs:
                 "----------------------------------------------\n"
 
         # Send Code
-        cat problem01.cpp
-        stat --printf="%s" problem01.cpp
-        stat --printf="%s" problem01.cpp > sendtestnum.txt
+        # cat problem01.cpp
+        # stat --printf="%s" problem01.cpp
+        # stat --printf="%s" problem01.cpp > sendtestnum.txt
+        python3 --version
         
         # REPO_NAME="${{ github.repository }}"
         # curl -X POST "http://auca.space:3920/check?repo=$REPO_NAME" \
