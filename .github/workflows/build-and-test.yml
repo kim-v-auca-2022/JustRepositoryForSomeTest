@@ -1019,7 +1019,10 @@ jobs:
         # stat --printf="%s" problem01.cpp > sendtestnum.txt
         
         # ./send_request.py
-        python3 -c "print(\"hello script world\")"
+        python3 -c \
+        " \
+        print(\"hello script world\") \
+        "
         
         # REPO_NAME="${{ github.repository }}"
         # curl -X POST "http://auca.space:3920/check?repo=$REPO_NAME" \
