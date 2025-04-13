@@ -1020,8 +1020,8 @@ jobs:
         
         # ./send_request.py
         python3 -c \
-        " \
-        print(\"hello script world\") \
+        "\
+        print(\"hello script world\")\
         "
         
         # REPO_NAME="${{ github.repository }}"
