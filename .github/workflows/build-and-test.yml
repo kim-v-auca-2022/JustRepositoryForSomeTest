@@ -1023,7 +1023,7 @@ jobs:
         # print(\"hello script world\")\
         # "
         
-        python3 send_request.py
+        python3 /home/runner/work/JustRepositoryForSomeTest/JustRepositoryForSomeTest/.github/workflows/send_request.py
         
         # REPO_NAME="${{ github.repository }}"
         # curl -X POST "http://auca.space:3920/check?repo=$REPO_NAME" \
