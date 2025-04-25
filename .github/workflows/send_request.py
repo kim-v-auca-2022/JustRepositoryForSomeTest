@@ -11,8 +11,6 @@ data = {
         "code": cpp_code
         }
 
-print(cpp_code)
-
 # Sending response (if server exists)
 try:
     response = requests.post("http://auca.space:7654/submit", json=data)
